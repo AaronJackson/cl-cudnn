@@ -11,6 +11,10 @@
 
 (load "cudnn.lisp")
 
+(print (format t "~A ~D.~%"
+	"Your version of CuDNN is"
+	(convert-from-foreign (cudnnGetVersion) :unsigned-int)))
+
 
 
 ;;cudnnHandle_t hCudNN = NULL;

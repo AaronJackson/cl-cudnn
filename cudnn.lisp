@@ -61,7 +61,7 @@
 
 (cl:defconstant CUDNN_VERSION (cl:* 5 (cl:+ 1000 1) (cl:+ 100 10)))
 
-(cffi:defcfun ("cudnnGetVersion" cudnnGetVersion) :pointer)
+(cffi:defcfun ("cudnnGetVersion" cudnnGetVersion) :unsigned-int)
 
 (cffi:defcenum cudnnStatus_t
 	(:CUDNN_STATUS_SUCCESS #.0)
