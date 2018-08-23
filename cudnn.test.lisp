@@ -1,3 +1,5 @@
+(load "~/.sbclrc")
+
 (ql:quickload "cffi")
 
 (defpackage :cudnn
@@ -20,44 +22,65 @@
 		 :pointer *handle*
 		 cudnnStatus_t)
 
-;; should be CUDNN_STATUS_SUCCESS if you set
-;; CUDA_VISIBLE_DEVICES to something invalid it will return
-;; CUDNN_STATUS_NOT_INITIALIZED
+(defun Tensor4D (a b c d)
+  (let ((*tensor* (foreign-alloc :pointer)))
+    (foreign-funcall "cudnnCreateTensorDescriptor"
+		     :pointer *tensor*
+		     cudnnStatus_t)
+    (foreign-funcall "cudnnSetTensor4dDescriptor"
+		     :pointer (mem-aref *tensor* :pointer)
+		     :int (foreign-enum-value 'cudnnTensorFormat_t :CUDNN_TENSOR_NCHW)
+		     :int (foreign-enum-value 'cudnnDataType_t :CUDNN_DATA_FLOAT)
+		     :int a ; N
+		     :int b ; C
+		     :int c ; H
+		     :int d ; W
+		     cudnnStatus_t)
+    *tensor*))
 
-(defparameter *A* (cffi:foreign-alloc :pointer)) ;; input
-(defparameter *B* (cffi:foreign-alloc :pointer)) ;; output
-(defparameter *filter* (cffi:foreign-alloc :pointer)) ;; the conv filter
+(defun Filter4D (batch-size channels width height)
+  (let ((*desc* (foreign-alloc :pointer))
+	(*convolution* (foreign-alloc :pointer)))
+    (foreign-funcall "cudnnCreateFilterDescriptor"
+		     :pointer *desc*
+		     cudnnStatus_t)
+    (foreign-funcall "cudnnSetFilter4DDescriptor"
+		     :pointer (mem-aref *convolution* :pointer)
+		     :int (foreign-enum-value 'cudnnDataType_t :CUDNN_DATA_FLOAT)
+		     :int (foreign-enum-value 'cudnnTensorFormat_t :CUDNN_TENSOR_NCHW)
+		     :int batch-size
+		     :int channels
+		     :int width
+		     :int height
+		     cudnnStatus_t)
 
-(princ (foreign-funcall "cudnnCreateTensorDescriptor"
-			:pointer *A*
-			cudnnStatus_t))
+(defun SpatialConvolution 
 
-(princ (foreign-funcall "cudnnSetTensor4dDescriptor"
-			:pointer *A*
-			:int (foreign-enum-value 'cudnnTensorFormat_t :CUDNN_TENSOR_NCHW)
-			:int (foreign-enum-value 'cudnnDataType_t :CUDNN_DATA_DOUBLE)
-			:int 1  ; N
-			:int 1  ; C
-			:int 10 ; W
-			:int 10 ; H
-			cudnnStatus_t))
-
-cudnnTensorDescriptor_t output_descriptor;
-checkCUDNN(cudnnCreateTensorDescriptor(&output_descriptor));
-checkCUDNN(cudnnSetTensor4dDescriptor(output_descriptor,
-                                      /*format=*/CUDNN_TENSOR_NHWC,
-                                      /*dataType=*/CUDNN_DATA_FLOAT,
-                                      /*batch_size=*/1,
-                                      /*channels=*/3,
-                                      /*image_height=*/image.rows,
-                                      /*image_width=*/image.cols));
+(defvar tensor1 (Tensor4D 100 100 100 100))
+(print tensor1)
 
 
-;; (cffi:defcfun ("cudnnSetTensor4dDescriptor" cudnnSetTensor4dDescriptor) cudnnStatus_t
-;;   (tensorDesc :pointer)
-;;   (format cudnnTensorFormat_t)
-;;   (dataType cudnnDataType_t)
-;;   (n :int)
-;;   (c :int)
-;;   (h :int)
-;;   (w :int))
+;; (print (foreign-funcall "cudnnCreateFilterDescriptor"
+;; 			:pointer *convA-filter-desc*
+;; 			cudnnStatus_t))
+
+;; (print (foreign-funcall "cudnnSetFilter4dDescriptor"
+;; 			:pointer (mem-aref *convA-filter-desc* :pointer)
+;; 			:int (foreign-enum-value 'cudnnDataType_t :CUDNN_DATA_FLOAT)
+;; 			:int (foreign-enum-value 'cudnnTensorFormat_t :CUDNN_TENSOR_NCHW)
+;; 			:int 1    ; N
+;; 			:int 128  ; C
+;; 			:int 3    ; H
+;; 			:int 3    ; W
+;; 			cudnnStatus_t))
+
+;; (print (foreign-funcall "cudnnCreateConvolutionDescriptor"
+;; 			:pointer *convA-desc*
+;; 			cudnnStatus_t))
+
+
+
+
+;; (print (foreign-funcall "cudnnDestroyTensorDescriptor"
+;; 			:pointer (mem-aref *A* :pointer)
+;; 			cudnnStatus_t))
