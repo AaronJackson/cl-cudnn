@@ -1,21 +1,17 @@
-(load "~/.sbclrc")
+#!/usr/local/sbcl --script
 
-(ql:quickload "cffi")
+(asdf:load-system :cl-cudnn)
 
-(defpackage :cudnn
-  (:use :common-lisp :cffi))
-
-(in-package :cudnn)
+(in-package #:cl-cudnn)
 
 (define-foreign-library cudnn
   (t (:default "libcudnn")))
 (use-foreign-library cudnn)
 
-(load "cudnn.lisp")
 
-(print (format t "~A ~D.~%"
+(format t "~A ~D.~%"
 	"Your version of CuDNN is"
-	(convert-from-foreign (cudnnGetVersion) :unsigned-int)))
+	(convert-from-foreign (cudnnGetVersion) :unsigned-int))
 
 (defparameter *handle* (cffi:foreign-alloc :pointer))
 (foreign-funcall "cudnnCreate"
